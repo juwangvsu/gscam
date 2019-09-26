@@ -1,0 +1,226 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+# for examples
+
+# If not running interactively, don't do anything
+#[ -z "$PS1" ] && return
+
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
+term_title(){
+	echo -en "\033]0;$1\a"
+}
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+#shopt -s globstar
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
+fi
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color) color_prompt=yes;;
+esac
+
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+#force_color_prompt=yes
+
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+	# We have color support; assume it's compliant with Ecma-48
+	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+	# a case would tend to support setf rather than setaf.)
+	color_prompt=yes
+    else
+	color_prompt=
+    fi
+fi
+
+if [ "$color_prompt" = yes ]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
+
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+xterm*|rxvt*)
+    #PS1="${debian_chroot:+($debian_chroot)}\u@\h: \w\a\$"
+    ;;
+*)
+    ;;
+esac
+
+# enable color support of ls and also add handy aliases
+    alias wifiup='sudo ifconfig wlan6 up'
+    alias ls='ls --color=auto'
+    alias videoreset='sudo modprobe -r uvcvideo; sudo modprobe uvcvideo'
+    alias videohelp='gedit /home/student/catkin_ws/src/gscam/examples/README.txt'
+    alias videoavifile='cd /media/student/code2/gstreamer-tutorial; gst-launch-1.0 filesrc location=drop.avi ! decodebin  ! videoconvert ! autovideosink'
+    alias videoaudiofilesink='gst-launch-0.10 filesrc location=hillbellybone.mp3 ! mad  ! audioconvert ! alsasink'
+    alias videofilesink='gst-launch-1.0 filesrc location=small.ogv ! decodebin name=dec ! queue ! videoconvert ! autovideosink dec. ! queue ! audioconvert ! audioresample ! autoaudiosink'
+    alias videofilesink0.1='gst-launch-0.10 filesrc location=/home/student/Videos/small.ogv ! decodebin ! ffmpegcolorspace ! autovideosink dec.'
+    alias videoudpsink='gst-launch-1.0 udpsrc port=5600 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, sprop-parameter-sets=(string)\"J01AHqkYGwe83gDUBAQG2wrXvfAQ\\,KN4JyA\\=\\=\"" ! rtph264depay ! avdec_h264 ! autovideosink sync=false'
+#caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtpstreamdepay ! decodebin ! videoconvert
+    alias videoudpsink2=' gst-launch-1.0 udpsrc port=5600 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, sprop-parameter-sets=(string)\"Z0LAHp4hgRhTTUBAQFAAAAMAEAAAAwPI8WLu\,aM4GyyA\\=\"" ! rtph264depay ! avdec_h264 ! autovideosink sync=false'
+    alias videofileudpstream='python ~/turtlebot/src/rqt_mypkg/scripts/start3.py "use the same sprop-parameter-sets at the receiver" && roscd gscam/examples; gst-launch-1.0 -v filesrc location = big_buck_bunny_480p_h264.mov ! qtdemux ! h264parse ! rtph264pay ! udpsink host=localhost port=5600'
+    alias videofileudpstream2='python ~/turtlebot/src/rqt_mypkg/scripts/start3.py "use the same sprop-parameter-sets at the receiver" && roscd gscam/examples; gst-launch-1.0 -v filesrc location = video.mp4 ! qtdemux ! h264parse ! rtph264pay ! udpsink host=localhost port=5600'
+#udpsink host=192.1XX.XX.XX port=900
+    alias videostreamh264=' gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=640,height=480,framerate=15/1 ! x264enc pass=qual quantizer=20 tune=zerolatency ! rtph264pay ! udpsink host=localhost port=5600'
+ export SSH_CLIENT=`awk '{print $1}' <<< $SSH_CONNECTION`
+    alias videostreamtestvideomp4='gst-launch-1.0 videotestsrc ! avenc_mpeg4 ! rtpmp4vpay config-interval=1 ! udpsink host=$SSH_CLIENT port=5600'
+    alias videostreamtestvideomp4sink='gst-launch-1.0 -vvv udpsrc port=5600 caps="application/x-rtp" ! rtpmp4vdepay ! mpeg4videoparse ! avdec_mpeg4 ! autovideosink
+'
+    alias videostreamh264tofile='gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=640,height=480,framerate=15/1 ! x264enc pass=qual quantizer=20 tune=zerolatency ! flvmux ! filesink location=test.flv'
+    alias videofileudpstream3='python ~/turtlebot/src/rqt_mypkg/scripts/start3.py "this stream flv file to udp, use videosinkh264 to view" && roscd gscam/examples; gst-launch-1.0 -v filesrc location = ball.flv ! flvdemux ! h264parse ! rtph264pay ! udpsink host=localhost port=5600'
+    alias videosinkh264='gst-launch-1.0 -e -v udpsrc port=5600 ! application/x-rtp, payload=96 ! rtpjitterbuffer ! rtph264depay ! avdec_h264 ! autovideosink sync=false'
+    alias videosinkh264fromsolo='python ~/turtlebot/src/rqt_mypkg/scripts/start4.py "start telnet 10.1.1.1 5502 and then videosinkh264"'
+    alias videostreammjpeg='gst-launch-1.0 v4l2src device=/dev/mscam ! image/jpeg,width=640,height=480,framerate=15/1 !  rtpjpegpay  ! udpsink host=localhost port=5600'
+    alias videosinkjpeg='gst-launch-1.0 -e -v udpsrc port=5600 ! application/x-rtp, payload=96 ! rtpjitterbuffer ! rtpjpegdepay ! jpegdec ! autovideosink sync=false'
+    alias videostreammjpeglocal='gst-launch-1.0 v4l2src device=/dev/mscam ! image/jpeg,width=640,height=480,framerate=15/1 ! jpegdec ! xvimagesink'
+    alias videostreammjpeglocal2='gst-launch-1.0 v4l2src device=/dev/video1 !  autovideosink'
+    alias videotest='gst-launch-1.0 videotestsrc ! autovideosink'
+    alias videolocal='gst-launch-1.0 v4l2src device=/dev/video0 ! autovideosink'
+    alias px4sim='cd ~/Downloads/Firmware/Tools/sitl_gazebo/Build;make; cp *.so ~/Downloads/Firmware/build_posix_sitl_default/build_gazebo/; cd ~/Downloads/Firmware; make posix_sitl_default gazebo'
+    alias ardusim='echo "run this seperately : cd ~/Downloads/gazebo/gazebo-ardupilot; gazebo --verbose worlds/iris_arducopter_demo.world"; cd ~/Downloads/ardupilot-3.4.5/ardupilot/ArduCopter; sim_vehicle.py -f gazebo-iris -D --console --map'
+    alias ardugazebo='cd ~/Downloads/gazebo/gazebo-ardupilot; gazebo --verbose worlds/iris_arducopter_demo.world'
+    alias px4simnobuild='cd ~/Downloads/Firmware; Tools/sitl_run.sh /home/student/Downloads/Firmware/build_posix_sitl_default/src/firmware/posix/px4 posix-configs/SITL/init/lpe none gazebo none /home/student/Downloads/Firmware /home/student/Downloads/Firmware/build_posix_sitl_default'
+    alias px4simsitl1.5.5='cd ~/Downloads/px4-1.5.5/Firmware; make posix_sitl_default; Tools/sitl_run.sh /home/student/Downloads/px4-1.5.5/Firmware/build_posix_sitl_default/src/firmware/posix/px4 posix-configs/SITL/init/ekf2 none gazebo iris /home/student/Downloads/px4-1.5.5/Firmware /home/student/Downloads/px4-1.5.5/Firmware/build_posix_sitl_default'
+    alias px4simsitl1.5.5dbg='cd ~/Downloads/px4-1.5.5/Firmware; make posix_sitl_default; Tools/sitl_run.sh /home/student/Downloads/px4-1.5.5/Firmware/build_posix_sitl_default/src/firmware/posix/px4 posix-configs/SITL/init/ekf2 gdb gazebo iris /home/student/Downloads/px4-1.5.5/Firmware /home/student/Downloads/px4-1.5.5/Firmware/build_posix_sitl_default gazebo___gdb'
+    alias px4build='cd ~/Download/px4-1.5.5/Firmware/; make px4fmu-v2_default upload'
+    alias px4apmbuild='cd ~/Downloads/ardupilot-git-repo/ardupilot-solo/ArduCopter; make px4-v2-upload'
+    alias px4apm3.2='cd ~/Downloads/ardupilot-3.2.1/ardupilot/ArduCopter; make px4-v2-upload'
+    alias px4apmsitlbuild='cd ~/Downloads/ardupilot-3.6.0dev/ardupilot/Tools/autotest/;  ./sim_vehicle.py -v ArduCopter'
+    alias mavproxy5070='cd ~/Downloads/solo/etc-usrbin-from#2/usrbin; mavproxy.py --master=tcp:localhost:5760 --out=udp:localhost:14550 --out=udp:localhost:14570 --out=udp:10.0.0.30:14550 --daemon &'
+    alias mavproxynobcast='cd ~/Downloads/solo/etc-usrbin-from#2/usrbin; mavproxy.py --master=tcp:localhost:5760 --bcast_enable=0 --daemon --out=udp:localhost:14570 &'
+    alias solossh='echo "passwd: TjSDBkAu"; ssh root@10.1.1.10'
+    alias solossh2='echo "passwd: TjSDBkAu"; ssh root@10.1.1.1'
+    alias odroidssh='ssh student@192.168.1.109'
+    alias cloudssh='ssh -i ~/.ssh/id_rsa cc@129.114.32.39'
+    alias cloudssh2='ssh -i ~/.ssh/id_rsa cc@129.114.33.219'
+    alias cloudscp='scp -i ~/.ssh/id_rsa cc@129.114.32.39:'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
+alias ardupilotsim='cd ~/Downloads/ardupilot-3.4.5/ardupilot/ArduCopter;sim_vehicle.py --console --map --aircraft test'
+alias jmavsimsitl='cd ~/Downloads/Firmware/Tools/jMAVSim/;java -Djava.ext.dirs= -cp lib/*:out/production/jmavsim.jar me.drton.jmavsim.Simulator -udp 127.0.0.1:14560   '
+alias dronekitmainsearch='cd ~/dronekit-python/examples/simple_goto;python mainsearch3.py --beaconxy 10,20 --gcs udpout:localhost:14550 '
+alias dronekitsimgoto='cd ~/dronekit-python/examples/simple_goto;python simple_goto.py --gcs udpout:localhost:14550 '
+alias dronekitsimgotoudp='cd ~/dronekit-python/examples/simple_goto;python simple_goto.py --connect udp:localhost:14550 --gcs udpout:localhost:14560 '
+alias dronekitmavros='cd ~/dronekit-python/examples/vehicle_state;python vehicle_state.py --connect udp:localhost:14550 '
+alias solocmd='cd ~/Downloads/solo/etc-usrbin-from#2/usrbin; python udpclient.py info'
+alias dronekitserial='cd ~/dronekit-python/examples/vehicle_state;python vehicle_state.py --connect /dev/ttyACM0 '
+alias dronekitsitlcopter='dronekit-sitl copter-3.3'
+alias irissitlsimplegoto='~/bin/irissitlsimplegoto.sh'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+
+# some more ls aliases
+alias gpssh="screen /dev/ttyUSB0 9600 8N1"
+alias nutsh="screen /dev/ttyACM0 115200 8N1"
+alias nutsh5="screen /dev/ttyUSB0 57600"
+alias droidsh="screen /dev/ttyUSB0 115200 8N1"
+alias turtlebotsh="screen /dev/ttyUSB0 57600 8N1"
+alias turtlebotsh1="screen /dev/ttyUSB1 57600 8N1"
+alias turtlebotsh2="screen /dev/ttyUSB2 57600 8N1"
+alias killjava="killall -9 java & killall rosbag"
+alias killtag="killall -9 apriltag_detector_node & rosnode kill /apriltag_tfr & rosnode kill /image_publisher & killall my_publisher & rosnode kill /apriltag_detector"
+alias killoculus="killall -9 oculus_test"
+alias killrviz="killall -9 rviz"
+alias killdrone="killall -9 drone_estimation2 & killall -9 ardrone_driver & killall rviz &rosnode kill /drone_gui & rosnode kill /drone_autopilot & rosnode kill /drone_stateestimation & rosnode kill joy_node & killall message_to_tf & killall drone_gui & killall drone_autopilot & killall -9 drone_stateestimation"
+alias cdrosjava="cd rosjava_tutorial/src/rosjava_catkin_package_a/my_pub_sub_tutorial/src/main/java/com/github/rosjava_catkin_package_a/my_pub_sub_tutorial/"
+alias killgazebo="killall -9 apriltag_detector_node & killall -9 my_publisher & killall -9 ekf_localization_node & killall -9 costmap_2d_cloud & killall -9 navsat_transform_node & killall -9 deja-dup-monitor  & killall -9 telepathy-indicator & killall -9 mission-control-5 & killall -9 gazebo & killall -9 gzserver  & killall -9 gzclient& killall rviz &killall gazebo_laserscan & killall gazebo_bridge & killall slam_gmapping & killall move_base & killall state_publisher & killall static_transform_publisher & killall robot_pose_ekf & killall joint_state_publisher & killall heartbeat_listener & killall heartbeat"
+alias killros="killall -9 gpsd_client & killall -9 ardrone_driver & killall -9 drone_gui& killall -9 drone_autopilot & killall -9 drone_stateestimation  & killall -9 pr2_gripper_action & killall -9 camera_synchronizer & killall -9 aggregator_node & killall -9 single_joint_position_action& killall -9 image_proc &  killall -9 stereo_image_proc  & killall -9 hokuyo_node & killall -9 relay & killall -9 pr2_head_action & killall -9 buffer_server & killall -9 move_group & killall -9 pr2_mechanism_diagnostics & killall -9 robot_state_publisher & killall -9 amcl2 & killall -9 state_publisher & killall -9 static_transform_publisher& killall -9 joint_state_publisher & killall -9 turtlebot_teleop_joy & killall -9 heartbeat & killall -9 sonarnlServer-3_ros & killall -9 rviz & killall -9 map_saver & killall -9 joy_node & killall -9 python &  killall -9 slam_gmapping & killall -9 move_base & killall -9 amcl & killall -9 map_server & killall -9 rosmaster & killall -9 roscore  & killall -9 rosout& killall -9 roslaunch & killall -9 nodelet"
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash_aliases, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+    . /etc/bash_completion
+fi
+export NDDSHOME=/media/student/code2/rtidds_installed/rti_connext_dds-5.2.3/
+export LD_LIBRARY_PATH=export LD_LIBRARY_PATH=/media/student/code2/rtidds_installed/rti_connext_dds-5.2.3/lib/x64Linux3gcc4.8.2/:/media/student/code2/vsfm/vsfm/bin:/media/student/code2/vsfm/pba/bin:/home/student/Downloads/Firmware/build_posix_sitl_default/build_gazebo:/opt/meshlab:/usr/local/Aria/lib:/usr/local/lib:$LD_LIBRARY_PATH
+# VSU_success wifi
+#export ROS_MASTER_URI=http://hplaptop:11311
+#export ROS_HOSTNAME=hplaptop
+# dd_wrt wifi
+#export ROS_MASTER_URI=http://eko3:11311
+#export ROS_MASTER_URI=http://172.16.91.161:11311
+#export ROS_MASTER_URI=http://localhost:11311
+#export ROS_MASTER_URI==http://desk4:11311
+export ROS_MASTER_URI=http://localhost:11311
+#export ROS_HOSTNAME=hplapddwrt
+# home wifi
+#export ROS_MASTER_URI=http://hpdeskhome:11311
+#export ROS_MASTER_URI=http://deskhome:11311
+#export ROS_MASTER_URI=http://localhost:11311
+#export ROS_MASTER_URI=http://asus1:11311
+#export ROS_HOSTNAME=hplibrary
+#export ROS_HOSTNAME=hpoffice
+#export ROS_HOSTNAME=hplapddwrt
+#export ROS_HOSTNAME=localhost
+#export ROS_HOSTNAME=172.16.91.161
+export ROS_HOSTNAME=localhost
+#export ROS_HOSTNAME=hplapddwrt
+#source ~/ros_workspace/setup.sh
+export PATH=$PATH:$~/Downloads/ardupilot-3.6.0dev/ardupilot/Tools/autotest
+export PATH=$PATH:/usr/local/arm7/bin:/opt/meshlab:~/Downloads/qgroundcontrol:~/Firmware/Tools/sdlog2:~/Downloads/MatlabR16/bin:/media/student/code2/vsfm/vsfm/bin:/media/student/code2/lidar/LAStools/bin:/media/student/code2/lidar/PDAL/build/bin
+export PATH=$PATH:~/Downloads/ardupilot-3.4.5/ardupilot/Tools/autotest
+#export PATH=/usr/lib/ccache:$PATH
+export ARIA=/usr/local/Aria
+
+#tinyos environment setup:
+alias sniffer='cd /opt/tinyos-2.1.1/apps/tests/rssi_sniffer_ctp_noctp; java net.tinyos.rssi.TestSerial -comm serial@/dev/motettyusb1:57600 2< /dev/null'
+alias snifferreset='avrdude -cmib510 -P/dev/motettyusb0 -U hfuse:w:0xd9:m -pm1281  -C/etc/avrdude/avrdude.conf  -E reset'
+alias rssictp='cd /opt/tinyos-2.1.1/apps/tests/rssi_sniffer_ctp_noctp'
+alias ctlgui='cd tools/mon; java org.tekkotsu.mon.ControllerGUI 10.45.33.114 '
+alias listenraw='cd /opt/tinyos-2.1.1/apps/tests/rssi_sniffer_ctp_noctp; java net.tinyos.tools.ListenRaw -hex -iris /dev/motettyusb1'
+alias listenraw2='cd /opt/tinyos-2.1.1/apps/tests/rssi_sniffer_ctp_noctp; java net.tinyos.rssi.ListenRaw2 -comm serial@/dev/motettyusb1:57600 2< /dev/null'
+alias listenprintf='cd /opt/tinyos-2.1.1/apps/tutorials/Printf; java net.tinyos.tools.PrintfClient -comm serial@/dev/motettyusb1:57600 2</dev/null'
+eval "$BASH_POST_RC"
+export GAZEBO_MODEL_PATH=~/Downloads/ardupilot-3.4.5/gazebo_models
+export PYTHONPATH=/usr/local/lib/python2.7/dist-packages:$PYTHONPATH
+export PX4_NO_OPTIMIZATION='px4;^modules__local_position_estimator;^modules__uORB;^modules__systemlib$'
+#export PYTHONPATH=
+alias umountmm='sudo umount /dev/mmcblk0p1; sudo umount /dev/mmcblk0p2; sudo umount /dev/mmcblk0p3; sudo umount /dev/mmcblk0p4'
+alias umountsdb='sudo umount /dev/sdb1; sudo umount /dev/sdb2; sudo umount /dev/sdb3; sudo umount /dev/sdb4'
+alias sshfshome='cd /media/student; sshfs student@192.168.1.14:/media/student/code5 code5; sshfs student@192.168.1.14:/media/student/code6 code666; sshfs student@192.168.1.14:/media/student/code7 code7; sshfs student@192.168.1.14:/media/student/code1 code11'
+alias sshfsoffice='cd /media/student; sshfs student@192.168.1.128:/media/student/code5 code5; sshfs student@192.168.1.128:/media/student/code6 code666; sshfs student@192.168.1.128:/media/student/code7 code7; sshfs student@192.168.1.128:/media/student/code1 code11'
+alias sshfsoffice2='cd /media/student; sshfs student@10.45.33.120:/media/student/code5 code5; sshfs student@10.45.33.120:/media/student/code6 code666; sshfs student@10.45.33.120:/media/student/code7 code7; sshfs student@10.45.33.120:/media/student/code1 code11'
+alias sshfsumount='cd /media/student; fusermount -u code5; fusermount -u code666; fusermount -u code7; fusermount -u code11'
