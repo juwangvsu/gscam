@@ -1,4 +1,4 @@
-<launch>
+ <launch>
   <!-- this works if gscam is build with gstreamer-1.0
 This launchfile should bring up a node that broadcasts a ros image
        transport on /videofile/image_raw -->
